@@ -1,8 +1,8 @@
 /**
- * WEBSITE: https://themefisher.com
- * TWITTER: https://twitter.com/themefisher
- * FACEBOOK: https://www.facebook.com/themefisher
- * GITHUB: https://github.com/themefisher/
+ * WEBSITE: https:// .com
+ * TWITTER: https://twitter.com/ 
+ * FACEBOOK: https://www.facebook.com/ 
+ * GITHUB: https://github.com/ /
  */
 
 (function ($) {
