@@ -1,8 +1,8 @@
 const mysql = require("mysql");
 const { dbHost, user, password, database } = require("../config");
 const { Router } = require("express");
-const bcrypt = require("bcrypt");
-const { hash } = require("bcrypt");
+const crypto = require("crypto");
+const { response } = require("express");
 const router = Router();
 
 var email_in_use = "";
@@ -25,8 +25,10 @@ con.connect(function (err) {
 });
 
 async function hashPwd(password) {
-  const salt = await bcrypt.genSalt();
-  const psw = await bcrypt.hash(password, salt);
+  const psw = crypto
+    .createHmac("sha256", "gmp#united#3000")
+    .update(password)
+    .digest("hex");
   return psw;
 }
 
@@ -34,7 +36,7 @@ async function hashPwd(password) {
 router.get("/checkIfPatientExists", (req, res) => {
   let params = req.query;
   let email = params.email;
-  let statement = `SELECT * FROM Patient WHERE email = "${email}"`;
+  let statement = `SELECT * FROM Patient WHERE email = "${email}";`;
   console.log(statement);
   try {
     con.query(statement, function (error, results, fields) {
@@ -59,21 +61,20 @@ router.get("/makeAccount", async (req, res) => {
   let gender = query.gender;
   let medications = query.medications;
   let conditions = query.conditions;
-  let surgeries = query.surgeries;
+
+  console.log(medications, conditions);
   if (medications === undefined) {
     medications = "none";
   }
   if (conditions === undefined) {
     conditions = "none";
   }
-  if (!surgeries === undefined) {
-    surgeries = "none";
-  }
+
   let password = await hashPwd(query.password);
   let sql_statement =
     `INSERT INTO Patient (email, password, name, address, gender) 
                          VALUES ` +
-    `("${email}", "${password}", "${name}", "${address}", "${gender}")`;
+    `("${email}", "${password}", "${name}", "${address}", "${gender}");`;
   console.log(sql_statement);
   try {
     con.query(sql_statement, function (error, results, fields) {
@@ -98,19 +99,19 @@ router.get("/makeAccount", async (req, res) => {
       else {
         let generated_id = 1000;
         if (results.length > 0) {
-          generated_id = results[0].id + 1;
+          generated_id = parseInt(results[0].id) + 1;
         }
         let sql_statement =
           `INSERT INTO MedicalHistory (id, date, conditions, medication) 
           VALUES ` +
-          `("${generated_id}", curdate(), "${conditions}", "${medications}")`;
+          `("${generated_id}", curdate(), "${conditions}", "${medications}");`;
         console.log(sql_statement);
         con.query(sql_statement, function (error, results, fields) {
           if (error) console.log(error);
           else {
             let sql_statement =
               `INSERT INTO PatientsFillHistory (patient, history) 
-              VALUES ` + `("${email}",${generated_id})`;
+              VALUES ` + `("${email}",${generated_id});`;
             console.log(sql_statement);
             con.query(sql_statement, function (error, results, fields) {
               if (error) console.log(error);
@@ -130,7 +131,7 @@ router.get("/makeAccount", async (req, res) => {
 router.get("/checkIfDocExists", (req, res) => {
   let params = req.query;
   let email = params.email;
-  let statement = `SELECT * FROM Doctor WHERE email = "${email}"`;
+  let statement = `SELECT * FROM Doctor WHERE email = "${email}";`;
   console.log(statement);
   try {
     con.query(statement, function (error, results, fields) {
@@ -157,7 +158,7 @@ router.get("/makeDocAccount", (req, res) => {
   let sql_statement =
     `INSERT INTO Doctor (email, gender, password, name) 
                          VALUES ` +
-    `("${email}", "${gender}", "${password}", "${name}")`;
+    `("${email}", "${gender}", "${password}", "${name}");`;
   console.log(sql_statement);
   try {
     con.query(sql_statement, function (error, results, fields) {
@@ -165,7 +166,7 @@ router.get("/makeDocAccount", (req, res) => {
       else {
         let sql_statement =
           `INSERT INTO DocsHaveSchedules (sched, doctor) 
-                         VALUES ` + `(${schedule}, "${email}")`;
+                         VALUES ` + `(${schedule}, "${email}");`;
         console.log(sql_statement);
         con.query(sql_statement, function (error) {
           if (error) console.log(error);
@@ -184,21 +185,22 @@ router.get("/makeDocAccount", (req, res) => {
 });
 
 //Checks if patient is logged in
-router.get("/checklogin", (req, res) => {
-  let params = req.query;
-  let email = params.email;
-  let password = params.password;
-  let sql_statement = `SELECT * FROM Patient 
-                         WHERE email="${email}" 
-                         AND password="${password}"`;
+router.get("/login", async (req, res) => {
+  var params = req.query;
+  var email = params.email;
+  var password = params.password;
+  console.log(password);
+  password = await hashPwd(password);
+  let sql_statement = `SELECT * FROM Patient WHERE email="${email}" AND password="${password}";`;
   console.log(sql_statement);
   try {
     con.query(sql_statement, function (error, results, fields) {
       if (error) {
         console.log("error");
-        return res.status(500).json({ failed: "error ocurred" });
+        return res.sendStatus(500);
       } else {
         if (results.length === 0) {
+          return res.sendStatus(500);
         } else {
           var string = JSON.stringify(results);
           var json = JSON.parse(string);
@@ -217,21 +219,23 @@ router.get("/checklogin", (req, res) => {
 });
 
 //Checks if doctor is logged in
-router.get("/checkDoclogin", (req, res) => {
+router.get("/checkDoclogin", async (req, res) => {
   let params = req.query;
   let email = params.email;
-  let password = params.password;
+  var password = params.password;
+  password = await hashPwd(password);
   let sql_statement = `SELECT * 
                          FROM Doctor
-                         WHERE email="${email}" AND password="${password}"`;
+                         WHERE email="${email}" AND password="${password}";`;
   console.log(sql_statement);
   try {
     con.query(sql_statement, function (error, results, fields) {
       if (error) {
         console.log("eror");
-        return res.status(500).json({ failed: "error ocurred" });
+        return res.sendStatus(500);
       } else {
         if (results.length === 0) {
+          return res.sendStatus(500);
         } else {
           var string = JSON.stringify(results);
           var json = JSON.parse(string);
@@ -333,7 +337,7 @@ router.get("/checkIfApptExists", (req, res) => {
     WHERE patient = "${email}" AND
     appt = id AND
     date = ${sql_date} AND
-    starttime = ${sql_start}`;
+    starttime = ${sql_start};`;
   console.log(statement);
   try {
     con.query(statement, function (error, results, fields) {
@@ -342,7 +346,7 @@ router.get("/checkIfApptExists", (req, res) => {
         cond1 = results;
         statement = `SELECT * FROM Diagnose d INNER JOIN Appointment a 
         ON d.appt=a.id WHERE doctor="${doc_email}" AND date=${sql_date} AND status="NotDone" 
-        AND ${sql_start} >= starttime AND ${sql_start} < endtime`;
+        AND ${sql_start} >= starttime AND ${sql_start} < endtime;`;
         console.log(statement);
         con.query(statement, function (error, results, fields) {
           if (error) console.log(error);
@@ -428,7 +432,7 @@ router.get("/OneHistory", (req, res) => {
   let params = req.query;
   let email = params.patientEmail;
   let statement =
-    `SELECT gender,name,email,address,conditions,surgeries,medication
+    `SELECT gender,name,email,address,conditions,medication
                       FROM PatientsFillHistory,Patient,MedicalHistory
                       WHERE PatientsFillHistory.history=id
                       AND patient=email AND email = ` + email;
@@ -744,7 +748,7 @@ router.get("/deleteAppt", (req, res) => {
 
 // If 404, forward to error handler
 router.use(function (req, res, next) {
-  next(createError(404));
+  res.sendStatus(404);
 });
 
 module.exports = router;

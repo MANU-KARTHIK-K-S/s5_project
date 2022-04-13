@@ -29,7 +29,6 @@ const AppBar = (props) => (
   />
 );
 export class Settings extends Component {
-  constuctor() {}
   render() {
     return (
       <Grommet theme={theme} full>
@@ -41,7 +40,6 @@ export class Settings extends Component {
               </Heading>
             </a>
           </AppBar>
-          S
           <Box pad="small">
             <Form
               onSubmit={({ value }) => {

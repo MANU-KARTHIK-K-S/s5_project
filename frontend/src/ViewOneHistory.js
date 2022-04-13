@@ -108,12 +108,6 @@ export class ViewOneHistory extends Component {
                   <TableCell scope="row"></TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>
-                    <strong>Surgeries</strong>
-                  </TableCell>
-                  <TableCell>{patient.surgeries}</TableCell>
-                </TableRow>
-                <TableRow>
                   <TableCell scope="row"></TableCell>
                 </TableRow>
                 <TableRow>
