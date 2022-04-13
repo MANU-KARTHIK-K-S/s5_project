@@ -1,9 +1,3 @@
-/**
- * WEBSITE: https:// .com
- * TWITTER: https://twitter.com/ 
- * FACEBOOK: https://www.facebook.com/ 
- * GITHUB: https://github.com/ /
- */
 
 (function ($) {
 	'use strict';
