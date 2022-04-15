@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import Home from "./Home";
-import LogIn from "./logIn.js";
-import CreateAccount from "./CreateAccount.js";
-import SchedulingAppt from "./schedulingAppt.js";
-import ViewMedHist from "./ViewMedHist.js";
-import DocHome from "./DocHome.js";
-import ViewOneHistory from "./ViewOneHistory.js";
-import Settings from "./Settings.js";
-import DocSettings from "./DocSettings.js";
-import PatientsViewAppt from "./PatientsViewAppt.js";
-import NoMedHistFound from "./NoMedHistFound.js";
-import DocViewAppt from "./DocViewAppt.js";
-import MakeDoc from "./MakeDoc.js";
-import Diagnose from "./Diagnose.js";
-import ShowDiagnoses from "./ShowDiagnoses.js";
+import { Redirect } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, use } from "react-router-dom";
+import Home from "./Pages/Home";
+import PatientHome from "./Pages/PatientHome";
+import LogIn from "./Pages/logIn.js";
+import CreateAccount from "./Pages/CreateAccount.js";
+import SchedulingAppt from "./Pages/schedulingAppt.js";
+import ViewMedHist from "./Pages/ViewMedHist.js";
+import DocHome from "./Pages/DocHome.js";
+import ViewOneHistory from "./Pages/ViewOneHistory.js";
+import Settings from "./Pages/Settings.js";
+import DocSettings from "./Pages/DocSettings.js";
+import PatientsViewAppt from "./Pages/PatientsViewAppt.js";
+import NoMedHistFound from "./Pages/NoMedHistFound.js";
+import DocViewAppt from "./Pages/DocViewAppt.js";
+import MakeDoc from "./Pages/MakeDoc.js";
+import Diagnose from "./Pages/Diagnose.js";
+import ShowDiagnoses from "./Pages/ShowDiagnoses.js";
 
 export default function App() {
-  let [component, setComponent] = useState(<LogIn />);
+  let [component, setComponent] = useState(<Home />);
   useEffect(() => {
     fetch("http://localhost:3001/userInSession")
       .then((res) => res.json())
@@ -27,12 +29,12 @@ export default function App() {
         let email = email_json.email;
         let who = email_json.who;
         if (email === "") {
-          setComponent(<LogIn />);
+          setComponent(<Home />);
         } else {
           if (who === "pat") {
-            setComponent(<Home />);
+            setComponent(<Redirect to="/PatientHome" />);
           } else {
-            setComponent(<DocHome />);
+            setComponent(<Redirect to="DocHome" />);
           }
         }
       });
@@ -41,6 +43,7 @@ export default function App() {
     <Router>
       <div>
         <Switch>
+          <Route path="/Home"></Route>
           <Route path="/NoMedHistFound">
             <NoMedHistFound />
           </Route>
@@ -69,8 +72,8 @@ export default function App() {
             path="/ViewOneHistory/:email"
             render={(props) => <ViewOneHistory {...props} />}
           />
-          <Route path="/Home">
-            <Home />
+          <Route path="/PatientHome">
+            <PatientHome />
           </Route>
           <Route path="/createAcc">
             <CreateAccount />
